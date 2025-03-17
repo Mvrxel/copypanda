@@ -12,9 +12,8 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FileText, Code, Newspaper } from "lucide-react";
 import { PresetModal } from "./preset-modal";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface SettingsStepProps {
   form: UseFormReturn<ArticleFormValues>;
@@ -26,16 +25,19 @@ const mockPresets = [
     id: "1",
     name: "Blog Post",
     description: "Casual, medium length with bullet points",
+    icon: FileText,
   },
   {
     id: "2",
     name: "Technical Article",
     description: "Formal, detailed with subheadings",
+    icon: Code,
   },
   {
     id: "3",
     name: "News Article",
     description: "Journalistic style with summary",
+    icon: Newspaper,
   },
 ];
 
@@ -59,32 +61,49 @@ export function SettingsStep({ form }: SettingsStepProps) {
           <FormItem className="space-y-4">
             <FormLabel>Select Preset</FormLabel>
             <FormControl>
-              <RadioGroup
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                className="space-y-3"
-              >
-                {mockPresets.map((preset) => (
-                  <FormItem
-                    key={preset.id}
-                    className="flex items-start space-x-3 space-y-0"
-                  >
-                    <FormControl>
-                      <RadioGroupItem value={preset.id} />
-                    </FormControl>
-                    <div className="w-full">
+              <div className="grid gap-4">
+                {mockPresets.map((preset) => {
+                  const isSelected = field.value === preset.id;
+                  const Icon = preset.icon;
+
+                  return (
+                    <div
+                      key={preset.id}
+                      onClick={() => {
+                        field.onChange(preset.id);
+                        void form.trigger("presetId");
+                      }}
+                      className="cursor-pointer"
+                    >
                       <Card
-                        className={`cursor-pointer p-4 ${field.value === preset.id ? "border-primary" : ""}`}
+                        className={`p-4 transition-all ${
+                          isSelected
+                            ? "border-primary"
+                            : "border-muted hover:border-primary/50"
+                        }`}
                       >
-                        <div className="font-medium">{preset.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {preset.description}
+                        <div className="flex items-start space-x-3">
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="font-medium">{preset.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {preset.description}
+                            </p>
+                          </div>
                         </div>
                       </Card>
                     </div>
-                  </FormItem>
-                ))}
-              </RadioGroup>
+                  );
+                })}
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

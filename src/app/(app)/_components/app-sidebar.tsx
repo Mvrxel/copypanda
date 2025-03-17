@@ -16,16 +16,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import {
-  RiSlowDownLine,
-  RiLeafLine,
-  RiNavigationLine,
-  RiSpeakLine,
-  RiCodeSSlashLine,
-  RiGeminiLine,
-  RiLinksLine,
-  RiDatabase2Line,
-} from "@remixicon/react";
+import { RiSlowDownLine } from "@remixicon/react";
 
 // This is sample data.
 const data = {
