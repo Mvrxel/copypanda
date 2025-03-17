@@ -7,6 +7,9 @@ import {
   text,
   timestamp,
   varchar,
+  uuid,
+  boolean,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -106,3 +109,249 @@ export const verificationTokens = createTable(
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
   }),
 );
+
+export const articles = createTable("article", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id),
+  title: varchar("title", { length: 255 })
+    .notNull()
+    .$defaultFn(() => "Draft"),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const articlesRelations = relations(articles, ({ one }) => ({
+  user: one(users, { fields: [articles.userId], references: [users.id] }),
+}));
+
+export const tasks = createTable("task", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  articleId: uuid("article_id")
+    .notNull()
+    .references(() => articles.id),
+  runId: varchar("run_id", { length: 255 }).notNull(),
+  publicToken: varchar("public_token", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  article: one(articles, {
+    fields: [tasks.articleId],
+    references: [articles.id],
+  }),
+}));
+
+export const presets = createTable("preset", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const presetsRelations = relations(presets, ({ one }) => ({
+  user: one(users, { fields: [presets.userId], references: [users.id] }),
+  format: one(presetFormat, {
+    fields: [presets.id],
+    references: [presetFormat.presetId],
+  }),
+  length: one(presetLength, {
+    fields: [presets.id],
+    references: [presetLength.presetId],
+  }),
+  options: one(presetOptions, {
+    fields: [presets.id],
+    references: [presetOptions.presetId],
+  }),
+  style: one(presetStyle, {
+    fields: [presets.id],
+    references: [presetStyle.presetId],
+  }),
+}));
+
+export const presetFormat = createTable("preset_format", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  presetId: uuid("preset_id")
+    .notNull()
+    .references(() => presets.id),
+  subheadings: boolean("subheadings").notNull().default(false),
+  bulletPoints: boolean("bullet_points").notNull().default(false),
+  numberedList: boolean("numbered_list").notNull().default(false),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const presetLength = createTable("preset_length", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  presetId: uuid("preset_id")
+    .notNull()
+    .references(() => presets.id),
+  short: boolean("short").notNull().default(false),
+  medium: boolean("medium").notNull().default(true),
+  long: boolean("long").notNull().default(false),
+  superLong: boolean("super_long").notNull().default(false),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  }),
+});
+
+export const presetOptions = createTable("preset_options", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  presetId: uuid("preset_id")
+    .notNull()
+    .references(() => presets.id),
+  faqSections: boolean("faq_sections").notNull().default(false),
+  summary: boolean("summary").notNull().default(false),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  }),
+});
+
+export const presetStyleContentTone = pgEnum("preset_style_content_tone", [
+  "casual",
+  "formal",
+  "technical",
+  "creative",
+  "educational",
+  "journalistic",
+]);
+
+export const presetStyleWritingStyle = pgEnum("preset_style_writing_style", [
+  "narrative",
+  "descriptive",
+  "expository",
+  "persuasive",
+  "conversational",
+  "analytical",
+]);
+
+export const presetStyle = createTable("preset_style", {
+  id: uuid("id")
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  presetId: uuid("preset_id")
+    .notNull()
+    .references(() => presets.id),
+  contentTone: presetStyleContentTone("content_tone")
+    .notNull()
+    .$defaultFn(() => "casual"),
+  writingStyle: presetStyleWritingStyle("writing_style")
+    .notNull()
+    .$defaultFn(() => "narrative"),
+  createdAt: timestamp("created_at", {
+    mode: "date",
+    withTimezone: true,
+  })
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at", {
+    mode: "date",
+    withTimezone: true,
+  }),
+});
+
+export const presetFormatRelations = relations(presetFormat, ({ one }) => ({
+  preset: one(presets, {
+    fields: [presetFormat.presetId],
+    references: [presets.id],
+  }),
+}));
+
+export const presetLengthRelations = relations(presetLength, ({ one }) => ({
+  preset: one(presets, {
+    fields: [presetLength.presetId],
+    references: [presets.id],
+  }),
+}));
+
+export const presetOptionsRelations = relations(presetOptions, ({ one }) => ({
+  preset: one(presets, {
+    fields: [presetOptions.presetId],
+    references: [presets.id],
+  }),
+}));
+
+export const presetStyleRelations = relations(presetStyle, ({ one }) => ({
+  preset: one(presets, {
+    fields: [presetStyle.presetId],
+    references: [presets.id],
+  }),
+}));
