@@ -3,13 +3,20 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ArticleFormValues, articleFormSchema } from "./form-schema";
+import {
+  type ArticleFormValues,
+  articleFormSchema,
+  defaultArticleFormValues,
+} from "./form-schema";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TitleStep } from "./title-step";
 import { SectionsStep } from "./sections-step";
 import { SettingsStep } from "./settings-step";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const steps = [
   { id: "title", label: "Title" },
@@ -19,19 +26,27 @@ const steps = [
 
 export function NewArticleForm() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
-    defaultValues: {
-      title: "",
-      context: "",
-      sections: [],
-      presetId: undefined,
-    },
+    defaultValues: defaultArticleFormValues,
     mode: "onChange",
   });
 
   const { formState } = form;
+
+  // Create article mutation
+  const generateArticleMutation = api.article.genereteArticle.useMutation({
+    onSuccess: () => {
+      toast.success("Article generation request processed");
+      setIsSubmitting(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to generate article: ${error.message}`);
+      setIsSubmitting(false);
+    },
+  });
 
   const goToNextStep = async () => {
     const fields = ["title", "sections"];
@@ -50,7 +65,30 @@ export function NewArticleForm() {
   };
 
   const onSubmit = (data: ArticleFormValues) => {
-    // This would be where we submit the form data to the server
+    setIsSubmitting(true);
+
+    // Check that we have the minimum required values
+    if (!data.title) {
+      toast.error("Article title is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!data.sections || data.sections.length === 0) {
+      toast.error("At least one section is required");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Call the API to generate the article
+    generateArticleMutation.mutate({
+      title: data.title,
+      context: data.context,
+      sections: data.sections,
+      presetId: data.presetId,
+    });
+
+    // Log the data for debugging
     console.log("Form submitted:", data);
   };
 
@@ -118,8 +156,22 @@ export function NewArticleForm() {
                   Next
                 </Button>
               ) : (
-                <Button type="submit" disabled={!formState.isValid}>
-                  Create Article
+                <Button
+                  type="submit"
+                  disabled={
+                    !formState.isValid ||
+                    isSubmitting ||
+                    generateArticleMutation.isPending
+                  }
+                >
+                  {isSubmitting || generateArticleMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Create Article"
+                  )}
                 </Button>
               )}
             </div>

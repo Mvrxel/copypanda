@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { type UseFormReturn, useFieldArray } from "react-hook-form";
 import { type ArticleFormValues } from "./form-schema";
 import {
@@ -25,6 +25,8 @@ import {
   Edit,
   Loader2,
 } from "lucide-react";
+import { api } from "@/trpc/react";
+import { toast } from "sonner";
 
 interface SectionsStepProps {
   form: UseFormReturn<ArticleFormValues>;
@@ -38,7 +40,10 @@ export function SectionsStep({ form }: SectionsStepProps) {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [sectionCount, setSectionCount] = useState(5); // Default to 5 sections
-  const [activeTab, setActiveTab] = useState("ai"); // Default to AI tab
+  const [activeTab, setActiveTab] = useState(() => {
+    // Initialize the active tab based on whether sections already exist
+    return form.getValues("sections")?.length > 0 ? "manual" : "ai";
+  });
 
   // When switching to manual tab, ensure there's at least one section
   const handleTabChange = (tab: string) => {
@@ -48,20 +53,67 @@ export function SectionsStep({ form }: SectionsStepProps) {
     }
   };
 
+  // Only initialize AI tab with empty sections if this is the first load and there are no sections
+  useEffect(() => {
+    // Only clear the sections if we're in AI tab mode and this is the initial render
+    const currentSections = form.getValues("sections") || [];
+    if (activeTab === "ai" && currentSections.length === 0) {
+      // This only happens on the first load when there are no sections yet
+      replace([]);
+    } else if (activeTab === "manual" && currentSections.length === 0) {
+      // Ensure at least one section in manual mode
+      append({ title: "" });
+    }
+  }, []); // Only run once on component mount
+
+  // Use the real AI section generation endpoint
+  const generateSectionsMutation = api.ai.genereteSection.useMutation({
+    onSuccess: (data) => {
+      if (data) {
+        // Transform the string array to the expected format with title property
+        const formattedSections = data.map((title) => ({ title }));
+        replace(formattedSections);
+
+        // Switch to manual tab after generation to prevent clearing sections
+        setActiveTab("manual");
+
+        toast.success("Sections generated successfully!");
+      } else {
+        toast.error("Failed to generate sections. Please try again.");
+      }
+    },
+    onError: (error) => {
+      toast.error(`Failed to generate sections: ${error.message}`);
+    },
+  });
+
   const handleGenerateSections = () => {
-    // Mock generation - in a real app, this would call an API
     setIsGenerating(true);
 
-    // Create empty sections based on the slider value
-    const newSections = Array.from({ length: sectionCount }, () => ({
-      title: "",
-    }));
-
-    // In a real app, you would populate these with AI-generated titles
-    setTimeout(() => {
-      replace(newSections);
+    // Validate that we have a title
+    const title = form.getValues("title");
+    if (!title) {
+      toast.error("Please enter an article title before generating sections");
       setIsGenerating(false);
-    }, 1500);
+      return;
+    }
+
+    // Get the optional context if available
+    const context = form.getValues("context");
+
+    // Call the AI generation endpoint
+    generateSectionsMutation.mutate(
+      {
+        title,
+        context,
+        count: sectionCount,
+      },
+      {
+        onSettled: () => {
+          setIsGenerating(false);
+        },
+      },
+    );
   };
 
   return (
@@ -123,10 +175,10 @@ export function SectionsStep({ form }: SectionsStepProps) {
             <Button
               type="button"
               onClick={handleGenerateSections}
-              disabled={isGenerating}
+              disabled={isGenerating || generateSectionsMutation.isPending}
               className="w-full"
             >
-              {isGenerating ? (
+              {isGenerating || generateSectionsMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Generating Sections...
@@ -140,8 +192,9 @@ export function SectionsStep({ form }: SectionsStepProps) {
             </Button>
 
             <p className="mt-4 text-xs text-muted-foreground">
-              Our AI will generate section titles based on your article title.
-              You can edit them afterward.
+              Our AI will generate section titles based on your article title
+              {form.getValues("context") ? " and context" : ""}. You can edit
+              them afterward.
             </p>
           </Card>
 

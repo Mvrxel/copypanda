@@ -50,3 +50,10 @@ export const presetFormSchema = z.object({
 
 export type ArticleFormValues = z.infer<typeof articleFormSchema>;
 export type PresetFormValues = z.infer<typeof presetFormSchema>;
+
+// Default values for the article form - no default sections
+export const defaultArticleFormValues: Partial<ArticleFormValues> = {
+  title: "",
+  context: "",
+  sections: [],
+};
