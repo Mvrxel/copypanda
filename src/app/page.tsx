@@ -3,6 +3,7 @@ import { auth } from "@/server/auth";
 import { HydrateClient } from "@/trpc/server";
 import { Button } from "../components/ui/button";
 import { SignOutButton } from "./_components/sign-out-button";
+import TestComponent from "./_components/test-component";
 export default async function Home() {
   const session = await auth();
   return (
@@ -13,6 +14,7 @@ export default async function Home() {
           {session.user.email}
           <div>
             <SignOutButton />
+            <TestComponent />
           </div>
         </div>
       ) : (
