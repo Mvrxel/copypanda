@@ -9,12 +9,10 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -42,6 +40,14 @@ export function SectionsStep({ form }: SectionsStepProps) {
   const [sectionCount, setSectionCount] = useState(5); // Default to 5 sections
   const [activeTab, setActiveTab] = useState("ai"); // Default to AI tab
 
+  // When switching to manual tab, ensure there's at least one section
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === "manual" && fields.length === 0) {
+      append({ title: "" });
+    }
+  };
+
   const handleGenerateSections = () => {
     // Mock generation - in a real app, this would call an API
     setIsGenerating(true);
@@ -67,7 +73,11 @@ export function SectionsStep({ form }: SectionsStepProps) {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ai" className="flex items-center gap-2">
             <Wand2 className="h-4 w-4" />

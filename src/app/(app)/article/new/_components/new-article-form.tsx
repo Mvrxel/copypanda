@@ -24,7 +24,8 @@ export function NewArticleForm() {
     resolver: zodResolver(articleFormSchema),
     defaultValues: {
       title: "",
-      sections: [{ title: "" }],
+      context: "",
+      sections: [],
       presetId: undefined,
     },
     mode: "onChange",

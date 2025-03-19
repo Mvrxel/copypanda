@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { type ArticleFormValues } from "./form-schema";
 import {
@@ -8,8 +9,10 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 
 interface TitleStepProps {
@@ -17,6 +20,13 @@ interface TitleStepProps {
 }
 
 export function TitleStep({ form }: TitleStepProps) {
+  const [showContext, setShowContext] = useState(false);
+  const titleValue = form.watch("title");
+
+  useEffect(() => {
+    setShowContext(!!titleValue);
+  }, [titleValue]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,6 +53,29 @@ export function TitleStep({ form }: TitleStepProps) {
           </FormItem>
         )}
       />
+
+      {showContext && (
+        <FormField
+          control={form.control}
+          name="context"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Context (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Add additional context about your article to help with content generation..."
+                  className="min-h-[100px] resize-y"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                This information helps our AI understand your article better.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <Card className="mt-6 bg-muted/50 p-4">
         <h3 className="mb-2 font-medium">Tips for a great title</h3>
