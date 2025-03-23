@@ -17,6 +17,7 @@ import { SettingsStep } from "./settings-step";
 import { api } from "@/trpc/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const steps = [
   { id: "title", label: "Title" },
@@ -27,6 +28,7 @@ const steps = [
 export function NewArticleForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
@@ -48,7 +50,10 @@ export function NewArticleForm() {
     },
   });
 
-  const goToNextStep = async () => {
+  const goToNextStep = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent the default form submission
+    e.preventDefault();
+
     const fields = ["title", "sections"];
     const currentFields = fields[currentStep];
 
@@ -64,7 +69,7 @@ export function NewArticleForm() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const onSubmit = (data: ArticleFormValues) => {
+  const onSubmit = async (data: ArticleFormValues) => {
     setIsSubmitting(true);
 
     // Check that we have the minimum required values
@@ -80,13 +85,44 @@ export function NewArticleForm() {
       return;
     }
 
-    // Call the API to generate the article
-    generateArticleMutation.mutate({
-      title: data.title,
-      context: data.context,
-      sections: data.sections,
-      presetId: data.presetId,
-    });
+    // Validate title length to prevent database error
+    if (data.title.length > 190) {
+      toast.error("Title is too long (maximum 190 characters)");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate section title lengths
+    const longSectionTitle = data.sections.find(
+      (section) => section.title.length > 190,
+    );
+    if (longSectionTitle) {
+      toast.error(
+        `Section title "${longSectionTitle.title.substring(0, 30)}..." is too long (maximum 190 characters)`,
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Call the API to generate the article
+      const articleResponse = await generateArticleMutation.mutateAsync({
+        title: data.title,
+        context: data.context,
+        sections: data.sections,
+        presetId: data.presetId,
+      });
+
+      if (articleResponse) {
+        if (articleResponse.articleId) {
+          router.push(`/article/${articleResponse.articleId}`);
+        }
+      }
+    } catch (error) {
+      console.error("Article generation failed:", error);
+      // Error is handled by the mutation's onError callback
+      setIsSubmitting(false);
+    }
 
     // Log the data for debugging
     console.log("Form submitted:", data);

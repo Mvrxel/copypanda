@@ -6,12 +6,18 @@ import {
 
 // Form schema for the article creation form
 export const articleFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(190, "Title is too long (maximum 190 characters)"),
   context: z.string().optional(),
   sections: z
     .array(
       z.object({
-        title: z.string().min(1, "Section title is required"),
+        title: z
+          .string()
+          .min(1, "Section title is required")
+          .max(190, "Section title is too long (maximum 190 characters)"),
       }),
     )
     .min(1, "At least one section is required")

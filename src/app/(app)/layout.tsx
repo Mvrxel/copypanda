@@ -27,7 +27,7 @@ export default async function Layout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
+      <main className="h-full w-full">
         <SidebarInset>
           <div className="@container bg-gray-50 px-4 md:px-6 lg:px-8">
             <div className="mx-auto w-full max-w-6xl">

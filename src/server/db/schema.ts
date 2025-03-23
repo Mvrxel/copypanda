@@ -110,17 +110,27 @@ export const verificationTokens = createTable(
   }),
 );
 
+export const articleStatus = pgEnum("article_status", [
+  "running",
+  "completed",
+  "failed",
+]);
+
 export const articles = createTable("article", {
   id: uuid("id")
     .notNull()
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  userId: varchar("user_id", { length: 255 })
+  userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  title: varchar("title", { length: 255 })
+  title: text("title")
     .notNull()
     .$defaultFn(() => "Draft"),
+  content: text("content"),
+  status: articleStatus("status")
+    .notNull()
+    .$defaultFn(() => "running"),
   createdAt: timestamp("created_at", {
     mode: "date",
     withTimezone: true,
@@ -135,8 +145,12 @@ export const articles = createTable("article", {
     .default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const articlesRelations = relations(articles, ({ one }) => ({
+export const articlesRelations = relations(articles, ({ one, many }) => ({
   user: one(users, { fields: [articles.userId], references: [users.id] }),
+  tasks: one(tasks, {
+    fields: [articles.id],
+    references: [tasks.articleId],
+  }),
 }));
 
 export const tasks = createTable("task", {
@@ -147,8 +161,8 @@ export const tasks = createTable("task", {
   articleId: uuid("article_id")
     .notNull()
     .references(() => articles.id),
-  runId: varchar("run_id", { length: 255 }).notNull(),
-  publicToken: varchar("public_token", { length: 255 }).notNull(),
+  runId: text("run_id").notNull(),
+  publicToken: text("public_token").notNull(),
   createdAt: timestamp("created_at", {
     mode: "date",
     withTimezone: true,
@@ -175,10 +189,10 @@ export const presets = createTable("preset", {
     .notNull()
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  userId: varchar("user_id", { length: 255 })
+  userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  name: varchar("name", { length: 255 }).notNull(),
+  name: text("name").notNull(),
   createdAt: timestamp("created_at", {
     mode: "date",
     withTimezone: true,

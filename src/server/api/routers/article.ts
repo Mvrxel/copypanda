@@ -8,7 +8,11 @@ import {
   presetStyle,
   presetStyleContentTone,
   presetStyleWritingStyle,
+  articles,
+  tasks as dbTask,
 } from "@/server/db/schema";
+import { tasks } from "@trigger.dev/sdk/v3";
+import { type generateArticleContent } from "@/trigger/content-generation-agent";
 import { eq } from "drizzle-orm";
 
 // Preset schema for create/update operations
@@ -311,20 +315,88 @@ export const articleRouter = createTRPCRouter({
       // Create test object with all information
       const articleData = {
         title,
-        context,
-        sections,
-        preset: presetDetails,
-        timestamp: new Date().toISOString(),
-        userId: ctx.session.user.id,
+        context: context ?? undefined,
+        sections: sections.map((section) => section.title),
+        parameters: {
+          format: presetDetails?.format ?? {
+            subheadings: false,
+            bulletPoints: false,
+            numberedList: false,
+          },
+          length: presetDetails?.length ?? {
+            short: false,
+            medium: true,
+            long: false,
+            superLong: false,
+          },
+          options: presetDetails?.options ?? {
+            faqSections: false,
+            summary: false,
+          },
+          contentType: {
+            contentTone: presetDetails?.style?.contentTone ?? "casual",
+            writingStyle: presetDetails?.style?.writingStyle ?? "narrative",
+          },
+        },
       };
 
-      // Log the data
-      console.log(
-        "Article generation request:",
-        JSON.stringify(articleData, null, 2),
+      const article = await ctx.db
+        .insert(articles)
+        .values({
+          title: articleData.title,
+          userId: ctx.session.user.id,
+        })
+        .returning();
+
+      if (!article) {
+        throw new Error("Failed to create article");
+      }
+
+      if (!article[0]?.id) {
+        throw new Error("Failed to create article");
+      }
+
+      const handle = await tasks.trigger<typeof generateArticleContent>(
+        "generate-article-content",
+        {
+          title: articleData.title,
+          context: articleData.context,
+          sections: articleData.sections,
+          parameters: articleData.parameters,
+          articleId: article[0].id,
+        },
       );
 
-      // For now, return null as requested
-      return null;
+      const [id] = await ctx.db
+        .insert(dbTask)
+        .values({
+          articleId: article[0].id,
+          runId: handle.id,
+          publicToken: handle.publicAccessToken,
+        })
+        .returning();
+
+      return {
+        articleId: article[0].id,
+        runId: handle.id,
+        publicToken: handle.publicAccessToken,
+      };
+    }),
+
+  getArticleByUuid: protectedProcedure
+    .input(z.object({ uuid: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { uuid } = input;
+
+      const article = await ctx.db.query.articles.findFirst({
+        where: eq(articles.id, uuid),
+        with: {
+          tasks: true,
+        },
+      });
+      console.log(article);
+      return {
+        article,
+      };
     }),
 });
