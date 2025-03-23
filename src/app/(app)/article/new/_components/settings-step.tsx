@@ -150,6 +150,7 @@ export function SettingsStep({ form }: SettingsStepProps) {
             save your preferred content settings.
           </p>
           <Button
+            type="button"
             onClick={() => setIsModalOpen(true)}
             className="mx-auto flex items-center gap-2"
           >

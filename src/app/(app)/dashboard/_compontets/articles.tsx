@@ -18,11 +18,17 @@ export default function Articles() {
 
   if (data && data.length === 0)
     return (
-      <div className="mt-4 w-full rounded-lg border bg-white p-4">
-        <p className="text-sm text-gray-500">No articles found</p>
+      <div className="mt-4 flex w-full flex-col items-center justify-center gap-4 rounded-lg border bg-white p-4">
+        <p className="text-center text-gray-500">No articles found</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/article/new")}
+        >
+          Create New Article
+        </Button>
       </div>
     );
-
   return (
     <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {data?.map((article) => (

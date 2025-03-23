@@ -104,25 +104,25 @@ export function NewArticleForm() {
       return;
     }
 
-    try {
-      // Call the API to generate the article
-      const articleResponse = await generateArticleMutation.mutateAsync({
-        title: data.title,
-        context: data.context,
-        sections: data.sections,
-        presetId: data.presetId,
-      });
+    // try {
+    //   // Call the API to generate the article
+    //   const articleResponse = await generateArticleMutation.mutateAsync({
+    //     title: data.title,
+    //     context: data.context,
+    //     sections: data.sections,
+    //     presetId: data.presetId,
+    //   });
 
-      if (articleResponse) {
-        if (articleResponse.articleId) {
-          router.push(`/article/${articleResponse.articleId}`);
-        }
-      }
-    } catch (error) {
-      console.error("Article generation failed:", error);
-      // Error is handled by the mutation's onError callback
-      setIsSubmitting(false);
-    }
+    //   if (articleResponse) {
+    //     if (articleResponse.articleId) {
+    //       router.push(`/article/${articleResponse.articleId}`);
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.error("Article generation failed:", error);
+    //   // Error is handled by the mutation's onError callback
+    //   setIsSubmitting(false);
+    // }
 
     // Log the data for debugging
     console.log("Form submitted:", data);
