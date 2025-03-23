@@ -1,3 +1,4 @@
+"use client";
 import { NewArticleForm } from "./_components/new-article-form";
 
 export default function NewArticlePage() {

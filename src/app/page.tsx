@@ -3,18 +3,18 @@ import { auth } from "@/server/auth";
 import { HydrateClient } from "@/trpc/server";
 import { Button } from "../components/ui/button";
 import { SignOutButton } from "./_components/sign-out-button";
-import TestComponent from "./_components/test-component";
+import { redirect } from "next/navigation";
 export default async function Home() {
   const session = await auth();
+  if (session) {
+    redirect("/dashboard");
+  }
   return (
     <HydrateClient>
       {session ? (
-        // Content for authenticated users
         <div>
-          {session.user.email}
           <div>
             <SignOutButton />
-            <TestComponent />
           </div>
         </div>
       ) : (

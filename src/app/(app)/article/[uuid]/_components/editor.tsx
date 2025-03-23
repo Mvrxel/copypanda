@@ -9,7 +9,7 @@ type EditorProps = {
 export default function Editor({ articleContent }: EditorProps) {
   const [content, setContent] = useState(articleContent);
   return (
-    <div className="h-[calc(100vh-10rem)]">
+    <div className="h-[calc(100vh-6rem)]">
       <MinimalTiptapEditor
         value={content}
         onChange={(newContent: Content) => setContent(newContent as string)}

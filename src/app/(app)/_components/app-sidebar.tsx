@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { RiSlowDownLine } from "@remixicon/react";
+import { RiSettingsLine, RiSlowDownLine } from "@remixicon/react";
 
 // This is sample data.
 const data = {
@@ -32,9 +32,15 @@ const data = {
       items: [
         {
           title: "Dashboard",
-          url: "#",
+          url: "/dashboard",
           icon: RiSlowDownLine,
           isActive: true,
+        },
+        {
+          title: "Settings",
+          url: "#",
+          icon: RiSettingsLine,
+          isActive: false,
         },
       ],
     },
@@ -85,12 +91,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       collapsible="icon"
       variant="inset"
       {...props}
-      className="bg-gray-100"
+      className="bg-slate-100"
     >
-      <SidebarHeader className="mb-2 h-16 justify-center bg-gray-100 max-md:mt-2">
+      <SidebarHeader className="mb-2 h-16 justify-center bg-slate-100 max-md:mt-2">
         <SidebarLogo />
       </SidebarHeader>
-      <SidebarContent className="-mt-2 bg-gray-100">
+      <SidebarContent className="-mt-2 bg-slate-100">
         {data.navMain.map((item) => (
           <SidebarGroup key={item.title}>
             <SidebarGroupLabel className="uppercase text-muted-foreground/65">

@@ -13,7 +13,7 @@ import {
 } from "@/server/db/schema";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { type generateArticleContent } from "@/trigger/content-generation-agent";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 // Preset schema for create/update operations
 const presetSchema = z.object({
@@ -399,4 +399,11 @@ export const articleRouter = createTRPCRouter({
         article,
       };
     }),
+  getAllArticles: protectedProcedure.query(async ({ ctx }) => {
+    const data = await ctx.db.query.articles.findMany({
+      where: eq(articles.userId, ctx.session.user.id),
+      orderBy: [desc(articles.createdAt)],
+    });
+    return data;
+  }),
 });
