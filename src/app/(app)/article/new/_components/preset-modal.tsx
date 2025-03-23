@@ -98,10 +98,7 @@ export function PresetModal({ isOpen, onClose, onSave }: PresetModalProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
@@ -150,7 +147,8 @@ export function PresetModal({ isOpen, onClose, onSave }: PresetModalProps) {
                 Cancel
               </Button>
               <Button
-                type="submit"
+                type="button"
+                onClick={() => form.handleSubmit(handleSubmit)()}
                 disabled={createPreset.isPending || !form.formState.isValid}
               >
                 {createPreset.isPending ? (
