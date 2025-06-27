@@ -31,7 +31,12 @@ declare module "next-auth" {
   //   // role: UserRole;
   // }
 }
-const ALLOWED_EMAILS = ["mvrxel@gmail.com", "marcel.bilski@anzuro.com"];
+const ALLOWED_EMAILS = [
+  "mvrxel@gmail.com",
+  "marcel.bilski@anzuro.com",
+  "m.langowski@letsautomate.pl",
+  "marmarspolkacywilna@gmail.com",
+];
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
  *
